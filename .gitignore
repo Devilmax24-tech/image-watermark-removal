@@ -1,0 +1,10 @@
+venv/
+__pycache__/
+*.pyc
+.env
+data/output/
+data/input/
+.ipynb_checkpoints/
+*.log
+checkpoint.txt
+models/best.pt
