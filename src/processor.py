@@ -71,8 +71,6 @@ class BatchProcessor:
             
             # 2. Create Mask
             mask = self.detector.create_mask(img_rgb.shape, boxes)
-            mask_path = os.path.join("data/masks", filename)
-            cv2.imwrite(mask_path, mask)
             
             # 3. Inpaint
             inpainted_pil = self.inpainter.remove_watermark(img_rgb, mask)
@@ -115,21 +113,21 @@ class BatchProcessor:
         """
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
-            
+
         self.stats['start_time'] = time.time()
         self.stats['total'] = len(image_paths)
-        
+
         initial_processed = len(self.processed_files)
         print(f"Skipping {initial_processed} already processed images.")
-        
+
         with ThreadPoolExecutor(max_workers=self.num_workers) as executor:
             list(executor.map(lambda p: self.process_single_image(p, output_dir), image_paths))
-            
+
         end_time = time.time()
         duration = end_time - self.stats['start_time']
         actually_processed = self.stats['processed'] - initial_processed
         speed = (actually_processed / duration) * 60 if duration > 0 else 0
-        
+
         print("\n--- Processing Summary ---")
         print(f"Total Images: {self.stats['total']}")
         print(f"Already Processed (Skipped): {self.stats['skipped']}")
@@ -138,3 +136,60 @@ class BatchProcessor:
         print(f"Total Time: {duration:.2f} seconds")
         print(f"Average Speed: {speed:.2f} images/minute")
         print("--------------------------\n")
+
+    def process_batch_with_results(self, image_paths, clean_dir, failed_dir):
+        """
+        Process images and separate results into clean and failed directories.
+
+        Returns:
+            clean_paths  (list): Paths of successfully processed images in clean_dir.
+            failed_paths (list): Paths of original images copied to failed_dir.
+        """
+        os.makedirs(clean_dir, exist_ok=True)
+        os.makedirs(failed_dir, exist_ok=True)
+
+        self.stats['start_time'] = time.time()
+        self.stats['total'] = len(image_paths)
+
+        initial_processed = len(self.processed_files)
+        print(f"Skipping {initial_processed} already processed images.")
+
+        # Thread-safe result collectors
+        clean_paths = []
+        failed_paths = []
+        results_lock = threading.Lock()
+
+        def process_and_route(image_path):
+            success = self.process_single_image(image_path, clean_dir)
+            filename = os.path.basename(image_path)
+            with results_lock:
+                if success:
+                    clean_paths.append(os.path.join(clean_dir, filename))
+                else:
+                    # Copy the original image to the failed folder so it can be reviewed
+                    import shutil
+                    failed_dest = os.path.join(failed_dir, filename)
+                    try:
+                        shutil.copy2(image_path, failed_dest)
+                    except Exception as copy_err:
+                        print(f"  Could not copy failed image {filename}: {copy_err}")
+                    failed_paths.append(failed_dest)
+
+        with ThreadPoolExecutor(max_workers=self.num_workers) as executor:
+            list(executor.map(process_and_route, image_paths))
+
+        end_time = time.time()
+        duration = end_time - self.stats['start_time']
+        actually_processed = self.stats['processed'] - initial_processed
+        speed = (actually_processed / duration) * 60 if duration > 0 else 0
+
+        print("\n--- Processing Summary ---")
+        print(f"Total Images   : {self.stats['total']}")
+        print(f"Skipped        : {self.stats['skipped']}")
+        print(f"Newly Processed: {actually_processed}")
+        print(f"Failed         : {self.stats['failed']}")
+        print(f"Total Time     : {duration:.2f} seconds")
+        print(f"Speed          : {speed:.2f} images/minute")
+        print("--------------------------\n")
+
+        return clean_paths, failed_paths
