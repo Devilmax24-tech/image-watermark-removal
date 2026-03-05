@@ -10,12 +10,13 @@ from src.inpainter import WatermarkInpainter
 from src.utils import calculate_metrics, save_image_with_quality
 
 class BatchProcessor:
-    def __init__(self, model_path='models/best.pt', num_workers=4, checkpoint_file='checkpoint.txt'):
+    def __init__(self, model_path='models/best.pt', num_workers=4, checkpoint_file='checkpoint.txt', force=False):
         self.detector = WatermarkDetector(model_path)
         self.inpainter = WatermarkInpainter()
         self.num_workers = num_workers
         self.checkpoint_file = checkpoint_file
-        self.processed_files = self._load_checkpoints()
+        self.force = force
+        self.processed_files = self._load_checkpoints() if not force else set()
         self.stats = {
             'processed': len(self.processed_files),
             'failed': 0,
@@ -25,6 +26,8 @@ class BatchProcessor:
         self.lock = threading.Lock()
 
     def _load_checkpoints(self):
+        if self.force:
+            return set()
         if os.path.exists(self.checkpoint_file):
             with open(self.checkpoint_file, 'r') as f:
                 return set(line.strip() for line in f)
@@ -32,8 +35,9 @@ class BatchProcessor:
 
     def _save_checkpoint(self, filename):
         with self.lock:
-            with open(self.checkpoint_file, 'a') as f:
-                f.write(f"{filename}\n")
+            if not self.force:
+                with open(self.checkpoint_file, 'a') as f:
+                    f.write(f"{filename}\n")
             self.processed_files.add(filename)
 
     def process_single_image(self, image_path, output_dir):
@@ -43,7 +47,7 @@ class BatchProcessor:
         filename = os.path.basename(image_path)
         print(f"--- Processing: {filename} ---")
         
-        if filename in self.processed_files:
+        if not self.force and filename in self.processed_files:
             with self.lock:
                 self.stats['skipped'] += 1
             return True

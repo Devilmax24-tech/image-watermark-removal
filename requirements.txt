@@ -2,9 +2,6 @@ ultralytics
 opencv-python
 torch
 torchvision
-google-api-python-client
-google-auth-httplib2
-google-auth-oauthlib
 numpy
 scikit-image
 omegaconf

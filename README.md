@@ -1,50 +1,97 @@
 # Bulk Watermark Removal Tool (YOLOv11 + LaMA)
 
-An automated tool to detect and remove 1-3 watermarks from bulk images while preserving 100% original quality.
+An automated tool to detect and remove watermarks from images using AI detection (YOLOv11) and texture-aware inpainting (LaMA). This version is optimized for local processing with folder-drop capabilities.
 
-## Features
-- **YOLOv11 Detection**: High-accuracy watermark localization.
-- **LaMA Inpainting**: AI-powered fill that preserves background textures.
-- **Multi-threaded**: Processes images in parallel for high speed.
-- **Google Drive Integration**: Direct access to images via API.
-- **Quality Metrics**: Built-in SSIM and PSNR validation.
+---
 
-## Setup
+## 🛠 Features
+- **🤖 AI-Powered Detection**: Uses YOLOv11 to find watermarks with high precision.
+- **🎨 Deep Texture Filling**: Uses LaMA (Large Mask Inpainter) for invisible watermark removal.
+- **⚡ Super Speed**: Multi-threaded processing handles multiple images simultaneously.
+- **📁 Watch Mode**: Automatically processes images the moment you drop them into a folder.
+- **🔄 Force Mode**: Re-process images that were previously skipped.
 
-1. **Install Dependencies**:
-   ```bash
-   pip install -r requirements.txt
-   ```
+---
 
-2. **YOLOv11 Model**:
-   Place your trained YOLOv11 weights (`best.pt`) in the `models/` directory.
+## 🚀 Setup Guide (Step-by-Step)
 
-3. **Google Drive API (Optional)**:
-   - Go to [Google Cloud Console](https://console.cloud.google.com/).
-   - Create a project and enable "Google Drive API".
-   - Create OAuth 2.0 credentials and download `credentials.json`.
-   - Place `credentials.json` in the root directory.
+Follow these steps to set up the tool on any PC (Windows, Linux, or Mac).
 
-## Usage
+### 1. Prerequisites
+- **Python 3.9+** installed on your system.
+- **Git** installed on your system.
 
-### Local Processing
+### 2. Clone the Repository
+Open your terminal or command prompt and run:
 ```bash
-python main.py --input path/to/input/images --output path/to/output --workers 8
+git clone https://github.com/Devilmax24-tech/image-watermark-removal.git
+cd image-watermark-removal
 ```
 
-### Google Drive Processing
+### 3. Create a Virtual Environment (Recommended)
+Keep your system clean by using a virtual environment:
 ```bash
-python main.py --input DRIVE_FOLDER_ID --output path/to/output --drive --workers 8
+# Create the environment
+python -m venv venv
+
+# Activate it (Windows)
+venv\Scripts\activate
+
+# Activate it (Linux/Mac)
+source venv/bin/activate
 ```
 
-## Performance Specs
-- **Accuracy**: >99% (depends on model training).
-- **Speed**: Optimized for GPU; multi-threading handles bottlenecking on CPU/IO.
-- **Quality**: PSNR >40dB, SSIM >0.98.
+### 4. Install Dependencies
+```bash
+pip install -r requirements.txt
+```
 
-## Project Structure
+### 5. Add the AI Model
+1. Browse to the `models/` folder in the project directory.
+2. Place your trained YOLOv11 weights file named `best.pt` inside the `models/` folder.
+   *(Folder Path: `models/best.pt`)*
+
+---
+
+## 💻 How to Use
+
+### A. Simple Batch Processing
+Process all images in a folder and stop:
+```bash
+python main.py --input path/to/input_folder --output path/to/output_folder
+```
+
+### B. Auto-Watch Mode (Drop Folder)
+Drop images into a folder and they will be cleaned automatically while the program runs:
+```bash
+python main.py --input /path/to/desktop/folder --output /path/to/clean_folder --watch
+```
+
+### C. Force Re-Processing
+Process everything in the folder, even if they were cleaned before:
+```bash
+python main.py --input path/to/input_folder --output path/to/output_folder --force
+```
+
+---
+
+## 🔧 Command Options
+
+| Argument | Description | Default |
+| :--- | :--- | :--- |
+| `--input` | Path to the folder containing images to clean. | `data/input` |
+| `--output` | Path to the folder to save results. | `data/output` |
+| `--workers` | Number of images to process in parallel. | `4` |
+| `--watch` | Keep the tool running and watch for new files. | `Off` |
+| `--force` | Ignore history and re-clean everything. | `Off` |
+| `--interval` | Seconds to wait between checks in watch mode. | `2` |
+
+---
+
+## 📂 Project Structure
+- `main.py`: The entry point for running the tool.
 - `src/detector.py`: YOLOv11 watermark detection logic.
-- `src/inpainter.py`: LaMA inpainting wrapper.
-- `src/drive_manager.py`: Google Drive API integration.
-- `src/processor.py`: Orchestration and batch processing.
-- `src/utils.py`: Image quality metrics and helper functions.
+- `src/inpainter.py`: LaMA inpainting AI wrapper.
+- `src/processor.py`: Orchestration, multi-threading, and checkpoint logic.
+- `src/utils.py`: SSIM/PSNR image quality metrics.
+- `checkpoint.txt`: Automatically keeps track of which images are already done.
