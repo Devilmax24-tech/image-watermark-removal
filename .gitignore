@@ -7,4 +7,3 @@ data/input/
 .ipynb_checkpoints/
 *.log
 checkpoint.txt
-models/best.pt
