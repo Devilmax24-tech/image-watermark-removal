@@ -1,35 +1,31 @@
-# Bulk Watermark Removal Tool (YOLOv11 + LaMA)
+# 🚀 Bulk Watermark Removal Tool (YOLOv11 + LaMA)
 
-An automated tool to detect and remove watermarks from images using AI detection (YOLOv11) and texture-aware inpainting (LaMA). This version is optimized for local processing with folder-drop capabilities.
+An automated, AI-powered tool designed to detect and remove watermarks from images with high precision. Using **YOLOv11** for lightning-fast detection and **LaMA (Large Mask Inpainter)** for seamless texture filling, this tool ensures your images look clean and professional.
 
 ---
 
 ## 🛠 Features
-- **🤖 AI-Powered Detection**: Uses YOLOv11 to find watermarks with high precision.
-- **🎨 Deep Texture Filling**: Uses LaMA (Large Mask Inpainter) for invisible watermark removal.
-- **⚡ Super Speed**: Multi-threaded processing handles multiple images simultaneously.
-- **📁 Watch Mode**: Automatically processes images the moment you drop them into a folder.
-- **🔄 Force Mode**: Re-process images that were previously skipped.
+- **🤖 AI-Powered Detection**: Specifically trained YOLOv11 model to find watermarks.
+- **🎨 Deep Texture Filling**: Uses LaMA inpainting to fill removed areas invisibly.
+- **⚡ Multi-Threaded**: Process entire folders of images in parallel.
+- **📁 Watch Mode**: Real-time processing—drop a file in, and it's cleaned instantly.
+- **🔄 Smart Checkpoints**: Automatically skips already processed images.
 
 ---
 
-## 🚀 Setup Guide (Step-by-Step)
+## � 1. Quick Installation (Step-by-Step)
 
-Follow these steps to set up the tool on any PC (Windows, Linux, or Mac).
+Follow these steps to get the tool running on your system.
 
-### 1. Prerequisites
-- **Python 3.9+** installed on your system.
-- **Git** installed on your system.
-
-### 2. Clone the Repository
-Open your terminal or command prompt and run:
+### Step 1: Clone the Repository
+Open your terminal and run:
 ```bash
 git clone https://github.com/Devilmax24-tech/image-watermark-removal.git
 cd image-watermark-removal
 ```
 
-### 3. Create a Virtual Environment (Recommended)
-Keep your system clean by using a virtual environment:
+### Step 2: Set Up Virtual Environment (Recommended)
+This keeps your Python dependencies organized.
 ```bash
 # Create the environment
 python -m venv venv
@@ -41,57 +37,95 @@ venv\Scripts\activate
 source venv/bin/activate
 ```
 
-### 4. Install Dependencies
+### Step 3: Install Dependencies
 ```bash
 pip install -r requirements.txt
 ```
 
-### 5. Add the AI Model
-1. Browse to the `models/` folder in the project directory.
-2. Place your trained YOLOv11 weights file named `best.pt` inside the `models/` folder.
-   *(Folder Path: `models/best.pt`)*
+### Step 4: Download the AI Model
+You need the trained YOLOv11 weights (`best.pt`) for detection to work. Run this command to download it directly into the `models/` folder:
+
+```bash
+# Create the models directory if it doesn't exist
+mkdir -p models
+
+# Download the model weights
+wget -O models/best.pt https://github.com/Devilmax24-tech/image-watermark-removal/releases/download/v1.0/best.pt
+```
+> [!NOTE]
+> If the `wget` link above is not yet active, please manually place your `best.pt` file into the `models/` directory.
 
 ---
 
-## 💻 How to Use
+## 📂 2. Folder Setup Guide
 
-### A. Simple Batch Processing
-Process all images in a folder and stop:
-```bash
-python main.py --input path/to/input_folder --output path/to/output_folder
+The tool looks for images in an **Input** folder and saves results in an **Output** folder.
+
+### Default Structure
+By default, the tool expects this structure:
+```text
+image-watermark-removal/
+├── data/
+│   ├── input/   <-- Place your images here
+│   └── output/  <-- Cleaned images will appear here
 ```
 
-### B. Auto-Watch Mode (Drop Folder)
-Drop images into a folder and they will be cleaned automatically while the program runs:
-```bash
-python main.py --input /path/to/desktop/folder --output /path/to/clean_folder --watch
-```
-
-### C. Force Re-Processing
-Process everything in the folder, even if they were cleaned before:
-```bash
-python main.py --input path/to/input_folder --output path/to/output_folder --force
-```
+### How to set up your folders:
+1. **Create the folders**: The program will create them automatically if they don't exist, but you can create them manually:
+   ```bash
+   mkdir -p data/input data/output
+   ```
+2. **Add Images**: Simply copy or move the images you want to clean into `data/input`.
+3. **Check Results**: Once the program runs, cleaned images will be moved to `data/output`. Any images that the AI couldn't process will be moved to `data/output/failed`.
 
 ---
 
-## 🔧 Command Options
+## 💻 3. How to Use
+
+### A. Run a Single Batch
+Process all images currently in your input folder and then stop:
+```bash
+python main.py --input data/input --output data/output
+```
+
+### B. Use "Watch Mode" (Drop & Clean)
+Keep the program running. Every time you drop a new image into the input folder, it will be cleaned automatically:
+```bash
+python main.py --input data/input --output data/output --watch
+```
+
+### C. Advanced Options
+| Option | Command |
+| :--- | :--- |
+| **Increase Speed** | `python main.py --workers 8` (Uses 8 parallel threads) |
+| **Re-process Everything** | `python main.py --force` (Ignores previous history) |
+| **Custom Folders** | `python main.py --input ./my_images --output ./cleaned` |
+
+---
+
+## 🔧 Command Line Arguments Reference
 
 | Argument | Description | Default |
 | :--- | :--- | :--- |
-| `--input` | Path to the folder containing images to clean. | `data/input` |
-| `--output` | Path to the folder to save results. | `data/output` |
-| `--workers` | Number of images to process in parallel. | `4` |
-| `--watch` | Keep the tool running and watch for new files. | `Off` |
-| `--force` | Ignore history and re-clean everything. | `Off` |
+| `--input` | Path to folder with watermarked images. | `data/input` |
+| `--output` | Path to save cleaned images. | `data/output` |
+| `--model` | Path to the YOLOv11 `.pt` file. | `models/best.pt` |
+| `--workers` | Number of simultaneous image processes. | `4` |
+| `--watch` | Continuously watch input folder for new files. | `Off` |
+| `--force` | Process all images, even if done before. | `Off` |
 | `--interval` | Seconds to wait between checks in watch mode. | `2` |
 
 ---
 
-## 📂 Project Structure
-- `main.py`: The entry point for running the tool.
-- `src/detector.py`: YOLOv11 watermark detection logic.
-- `src/inpainter.py`: LaMA inpainting AI wrapper.
-- `src/processor.py`: Orchestration, multi-threading, and checkpoint logic.
-- `src/utils.py`: SSIM/PSNR image quality metrics.
-- `checkpoint.txt`: Automatically keeps track of which images are already done.
+## 📂 Project Architecture
+- `main.py`: Entry point for the application.
+- `src/detector.py`: AI logic for finding watermarks.
+- `src/inpainter.py`: AI logic for removing watermarks.
+- `src/processor.py`: Handles multi-threading and folder management.
+- `src/utils.py`: Image quality validation (SSIM/PSNR).
+- `checkpoint.txt`: History file to avoid re-processing the same image twice.
+
+---
+
+## 📜 License
+This project is licensed under the MIT License. Use responsibly.
